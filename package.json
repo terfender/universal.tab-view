@@ -15,7 +15,6 @@
     "@showtime-xyz/universal.collapsible-tab-view": "0.0.56",
     "@showtime-xyz/universal.haptics": "0.0.24",
     "@showtime-xyz/universal.hooks": "0.0.64",
-    "@showtime-xyz/universal.safe-area": "github:terfender/universal.safe-area",
     "@showtime-xyz/universal.tailwind": "0.0.52",
     "@showtime-xyz/universal.spinner": "0.0.73",
     "@showtime-xyz/universal.pressable": "0.0.65",

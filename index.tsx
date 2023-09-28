@@ -13,7 +13,6 @@ import {
 } from "@showtime-xyz/universal.collapsible-tab-view";
 import { Haptics } from "@showtime-xyz/universal.haptics";
 import { useIsDarkMode } from "@showtime-xyz/universal.hooks";
-import { useSafeAreaInsets } from "@showtime-xyz/universal.safe-area";
 import { colors } from "@showtime-xyz/universal.tailwind";
 
 import { RefreshControl } from "./refresh-control";
@@ -45,7 +44,6 @@ function HeaderTabView<T extends Route>({
   renderTabBar: renderTabBarProps,
   ...props
 }: TabBarProps<T>) {
-  const insets = useSafeAreaInsets();
   const isDark = useIsDarkMode();
 
   const renderTabBar = useCallback(
@@ -105,7 +103,7 @@ function HeaderTabView<T extends Route>({
       renderTabBar={renderTabBar}
       lazy
       onPullEnough={onPullEnough}
-      minHeaderHeight={insets.top + StatusBarHeight}
+      minHeaderHeight={StatusBarHeight}
       refreshControlColor={isDark ? colors.gray[400] : colors.gray[700]}
       refreshHeight={60}
       renderScene={_renderScene}
