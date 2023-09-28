@@ -22,7 +22,7 @@
     "@showtime-xyz/universal.view": "0.0.53",
     "@showtime-xyz/universal.pressable-hover": "0.0.21",
     "@showtime-xyz/universal.icon": "0.0.89",
-    "@showtime-xyz/universal.infinite-scroll-list": "0.0.50"
+    "@showtime-xyz/universal.infinite-scroll-list": "github:terfender/universal.infinite-scroll-list"
   },
   "devDependencies": {
     "@types/react-native": "^0.64.1",
