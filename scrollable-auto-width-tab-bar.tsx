@@ -12,9 +12,8 @@ import {
   NavigationState,
   SceneRendererProps,
   TabBar,
-} from "react-native-tab-view-next";
+} from "react-native-tab-view";
 
-import { Haptics } from "@showtime-xyz/universal.haptics";
 import { useIsDarkMode } from "@showtime-xyz/universal.hooks";
 import { Pressable } from "@showtime-xyz/universal.pressable";
 import { colors } from "@showtime-xyz/universal.tailwind";
@@ -36,16 +35,16 @@ export const ScollableAutoWidthTabBar = ({
   const isDark = useIsDarkMode();
   const indicatorFadeAnim = useRef(new Animated.Value(0)).current;
   const { width } = useWindowDimensions();
+  const measuredTabWidths = React.useRef<Record<string, number>>({});
+
   const contentWidth = useMemo(
     () => (width < maxContentWidth ? width : maxContentWidth),
     [maxContentWidth, width]
   );
-  const [tabsWidth, setTabsWidth] = useState<{
-    [index: number]: number;
-  }>({});
+  const [tabsWidth, setTabsWidth] = useState<Record<string, number>>({});
 
   const getActiveOpacityText = (
-    position: Animated.AnimatedInterpolation,
+    position: Animated.AnimatedInterpolation<number>,
     routes: Route[],
     tabIndex: number
   ) => {
@@ -62,18 +61,9 @@ export const ScollableAutoWidthTabBar = ({
   };
 
   const getTranslateX = (
-    position: Animated.AnimatedInterpolation,
+    position: Animated.AnimatedInterpolation<number>,
     routes: Route[]
   ) => {
-    if (
-      routes.length === 0 ||
-      Object.keys(tabsWidth)?.length === 0 ||
-      Object.keys(tabsWidth)?.length !== routes.length
-    ) {
-      return -contentWidth;
-    }
-
-    if (routes.length <= 1) return tabsWidth[0] / 2 + 8 ?? -contentWidth;
     const inputRange = routes.map((_, i) => i);
     const indicatorOutputRange = Object.values(tabsWidth).map(
       (value) => value / contentWidth
@@ -87,6 +77,8 @@ export const ScollableAutoWidthTabBar = ({
       return [...acc, acc[i - 1] + (tabsWidth[i - 1] + tabsWidth[i]) / 2 + 32];
     }, []);
 
+    if (routes.length === 1) return outputRange[0];
+
     return position.interpolate({
       inputRange,
       outputRange,
@@ -95,20 +87,15 @@ export const ScollableAutoWidthTabBar = ({
   };
 
   const getIndicatorScaleX = (
-    position: Animated.AnimatedInterpolation,
+    position: Animated.AnimatedInterpolation<number>,
     routes: Route[]
   ) => {
-    if (
-      routes.length === 0 ||
-      Object.keys(tabsWidth)?.length === 0 ||
-      Object.keys(tabsWidth)?.length !== routes.length
-    ) {
-      return 0;
-    }
     const inputRange = routes.map((_, i) => i);
     const outputRange = Object.values(tabsWidth).map(
       (value) => value / contentWidth
     );
+
+    if (inputRange.length === 1) return outputRange[0];
 
     return position.interpolate({
       inputRange,
@@ -116,10 +103,6 @@ export const ScollableAutoWidthTabBar = ({
       extrapolate: "clamp",
     });
   };
-
-  const onTabPress = useCallback(() => {
-    Haptics.impactAsync();
-  }, []);
 
   const onTabBarItemLayout = useCallback(
     ({
@@ -132,11 +115,16 @@ export const ScollableAutoWidthTabBar = ({
       width: number;
     }) => {
       const index = navigationState.routes.indexOf(route);
-      setTabsWidth(
-        Object.assign(tabsWidth, {
-          [index]: width,
-        })
-      );
+      measuredTabWidths.current[index] = width;
+
+      if (
+        navigationState.routes.every(
+          (r, i) => typeof measuredTabWidths.current[i] === "number"
+        )
+      ) {
+        setTabsWidth({ ...measuredTabWidths.current });
+      }
+
       if (index === navigationState.routes.length - 1) {
         Animated.timing(indicatorFadeAnim, {
           toValue: 1,
@@ -145,7 +133,7 @@ export const ScollableAutoWidthTabBar = ({
         }).start();
       }
     },
-    [indicatorFadeAnim, tabsWidth]
+    [indicatorFadeAnim]
   );
 
   return (
@@ -164,6 +152,11 @@ export const ScollableAutoWidthTabBar = ({
       ]}
       indicatorContainerStyle={{ zIndex: 1 }}
       renderIndicator={({ position, navigationState }) => {
+        if (
+          navigationState.routes.length === 0 ||
+          Object.keys(tabsWidth)?.length !== navigationState.routes.length
+        )
+          return null;
         return (
           <Animated.View
             style={[
@@ -191,7 +184,6 @@ export const ScollableAutoWidthTabBar = ({
       }}
       scrollEnabled
       tabStyle={styles.tabStyle}
-      onTabPress={onTabPress}
       renderTabBarItem={({
         onPress,
         onLongPress,
